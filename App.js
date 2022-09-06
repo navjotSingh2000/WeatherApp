@@ -1,112 +1,149 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+import React, { useState, useEffect } from 'react'
+import { StyleSheet, Text, View, ImageBackground } from 'react-native'
+import GetLocation from 'react-native-get-location'
+import Weather from './src/components/Weather';
+import morning from './src/images/morning.jpeg'
+import afternoon from './src/images/afternoon.jpeg'
+import evening from './src/images/evening.jpeg'
+import night from './src/images/night.jpeg'
+import rainy_day from './src/images/rainy_day.jpeg'
+import rainy_night from './src/images/rainy_night.jpeg'
+import snow_day from './src/images/snow_day.jpeg'
+import snow_night from './src/images/snow_night.jpeg'
 
-import React from 'react';
-import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const App = () => {
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  const [weatherData, setWeatherData] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [weatherPicture, setWeatherPicture] = useState();
 
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
+  useEffect(() => {
+    getCurrentLocation()
+  },[])
+  
+  const getCurrentLocation = async () => {
+    await GetLocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 15000,
+    })
+    .then(location => {
+        console.log(location);
+
+        getWeatherData(location.latitude, location.longitude)
+    })
+    .catch(error => {
+        const { code, message } = error;
+        console.warn(code, message);
+    })
+  }
+
+  const getWeatherData = async (lat, long) => {
+
+    const api = "https://api.openweathermap.org/data/2.5/weather?lat=" 
+    + lat +  "&lon=" + long + 
+    "&appid=8a4a555e1d4b813fb5e7eba4e8cec34c&units=metric";
+
+    console.log(api)
+
+    await fetch(api)
+    .then(res => res.json())
+    .then(jsonData => { 
+      console.log(jsonData)
+      setWeatherData(jsonData)
+
+      processData(jsonData)
+      
+    })
+    .catch(error => console.error(error))
+  }
+
+  const processData = async(data) => {
+    const mode = String(data.weather[0].main).toLowerCase
+    const hoursOfDay = new Date().getHours()
+    console.log("hoursOfDay")
+    console.log(hoursOfDay)
+
+    if(String(mode).includes("rain"))
+    {
+      if(hoursOfDay >= 7 && hoursOfDay <= 21)
+      {
+        setWeatherPicture(rainy_day)
+      }
+      else
+      {
+        setWeatherPicture(rainy_night)
+      }
+    }
+    else if(String(mode).includes("snow"))
+    {
+      if(hoursOfDay >= 7 && hoursOfDay <= 21)
+      {
+        setWeatherPicture(snow_day)
+      }
+      else
+      {
+        setWeatherPicture(snow_night)
+      }
+    }
+    else
+    {
+      if(hoursOfDay >= 7 && hoursOfDay <= 12)
+      {
+        setWeatherPicture(morning)
+        console.log("1")
+
+      }
+      else if(hoursOfDay > 12 && hoursOfDay <= 17)
+      {
+        setWeatherPicture(afternoon)
+        console.log("2")
+
+      }
+      else if(hoursOfDay > 17 && hoursOfDay <= 21){
+        setWeatherPicture(evening)
+        console.log("3")
+
+      }
+      else
+      {
+        setWeatherPicture(night)
+        console.log("4")
+      }
+    }
+
+    setLoading(true)
+  } 
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
+    <View style={styles.container}>
+      <ImageBackground source={weatherPicture} resizeMode="cover" style={styles.image}>
+        {loading ? 
+          <View>
+            <Weather 
+              currentTemp={weatherData.main.temp} 
+              description={weatherData.weather[0].description} 
+            />
+          </View>
+          :
+          <View>
+            <Text>Loading...</Text>
+          </View>
+        }
+    </ImageBackground>
+      
+        
     </View>
-  );
-};
+  )
+}
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
+export default App
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    flexDirection: 'column',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  image: {
+    flex: 1,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
-export default App;
+})

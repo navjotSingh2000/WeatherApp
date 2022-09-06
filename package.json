@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "react": "18.0.0",
-    "react-native": "0.69.4"
+    "react-native": "0.69.4",
+    "react-native-get-location": "^2.2.1",
+    "react-native-svg": "^13.1.0",
+    "react-native-svg-uri": "^1.2.3"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
