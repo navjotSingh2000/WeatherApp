@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { StyleSheet, Text, View, ImageBackground } from 'react-native'
+import { StyleSheet, Text, SafeAreaView, View, ImageBackground, ScrollView, RefreshControl } from 'react-native'
 import GetLocation from 'react-native-get-location'
 import Weather from './src/components/Weather';
 import morning from './src/images/morning.jpeg'
@@ -16,6 +16,7 @@ const App = () => {
   const [weatherData, setWeatherData] = useState({});
   const [loading, setLoading] = useState(false);
   const [weatherPicture, setWeatherPicture] = useState();
+  const [refreshing, setRefreshing] = useState();
 
   useEffect(() => {
     getCurrentLocation()
@@ -90,49 +91,56 @@ const App = () => {
       if(hoursOfDay >= 7 && hoursOfDay <= 12)
       {
         setWeatherPicture(morning)
-        console.log("1")
-
       }
       else if(hoursOfDay > 12 && hoursOfDay <= 17)
       {
         setWeatherPicture(afternoon)
-        console.log("2")
-
       }
       else if(hoursOfDay > 17 && hoursOfDay <= 21){
         setWeatherPicture(evening)
-        console.log("3")
-
       }
       else
       {
         setWeatherPicture(night)
-        console.log("4")
       }
     }
 
     setLoading(true)
-  } 
+  }
+
+  const slideToRefresh = () => {
+    setRefreshing(true)
+    getCurrentLocation()
+    setTimeout(()=>setRefreshing(false), 2000)
+  }
 
   return (
-    <View style={styles.container}>
-      <ImageBackground source={weatherPicture} resizeMode="cover" style={styles.image}>
-        {loading ? 
-          <View>
-            <Weather 
-              currentTemp={weatherData.main.temp} 
-              description={weatherData.weather[0].description} 
-            />
-          </View>
-          :
-          <View>
-            <Text>Loading...</Text>
-          </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={slideToRefresh}
+          />
         }
-    </ImageBackground>
-      
-        
-    </View>
+      >
+        <ImageBackground source={weatherPicture} resizeMode="cover" style={styles.image}>
+          {loading ? 
+            <View>
+              <Weather 
+                currentTemp={weatherData.main.temp} 
+                description={weatherData.weather[0].description} 
+              />
+            </View>
+            :
+            <View style={styles.loadingTxtContainer}>
+              <Text style={styles.loadingTxt}>Fetching Location...</Text>
+            </View>
+          }
+       </ImageBackground>
+      </ScrollView>
+    </SafeAreaView>
   )
 }
 
@@ -141,9 +149,21 @@ export default App
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'column',
+  },
+  scrollView: {
+    flex: 1,
   },
   image: {
     flex: 1,
   },
+  loadingTxtContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#AF9595'
+  },
+  loadingTxt: {
+    fontSize: 20,
+    color: '#FFF'
+  }
 })

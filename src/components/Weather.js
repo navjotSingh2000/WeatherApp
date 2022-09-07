@@ -4,7 +4,7 @@ import React from 'react'
 const Weather = ({currentTemp, description}) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.temp}>{currentTemp}</Text>
+      <Text style={styles.temp}>{currentTemp}&deg;C</Text>
       <Text style={styles.desc}>{description}</Text>
     </View>
   )
@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
         marginVertical: 100,
     },
     temp: {
-        fontSize: 80,
+        fontSize: 70,
         fontFamily: 'monospace'
     },
     desc: {
